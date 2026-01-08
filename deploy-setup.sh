@@ -7,45 +7,42 @@ cd /home/bismsjai/test.bismight.co.uk
 echo "🚀 Starting post-deployment setup..."
 echo ""
 
-# Copy .env.production to .env if .env doesn't exist
-if [ ! -f .env ]; then
-    if [ -f .env.production ]; then
-        cp .env.production .env
-        echo "✅ Created .env from .env.production"
-    else
-        cp .env.example .env
-        echo "✅ Created .env from .env.example"
-    fi
+# Copy .env.server to .env (this file has production settings)
+if [ -f .env.server ]; then
+    cp .env.server .env
+    echo "✅ Created .env from .env.server"
+elif [ -f .env.production ]; then
+    cp .env.production .env
+    echo "✅ Created .env from .env.production"
+else
+    cp .env.example .env
+    echo "✅ Created .env from .env.example"
 fi
 
-# Generate application key if not set
-if ! grep -q "APP_KEY=base64:" .env; then
-    php artisan key:generate --force
-    echo "✅ Generated application key"
-fi
+# Generate application key
+php artisan key:generate --force
+echo "✅ Generated application key"
 
-# Check if database credentials need updating
-if grep -q "CHANGE_ME_" .env; then
+# Prompt for database credentials if needed
+if grep -q "your_cpanel_database" .env; then
     echo ""
     echo "⚠️  Database credentials need to be configured!"
     echo ""
     
     # Prompt for database name
     read -p "Enter database name: " db_name
-    sed -i "s/CHANGE_ME_database_name/$db_name/" .env
+    sed -i "s/your_cpanel_database_name/$db_name/" .env
     
     # Prompt for database username
     read -p "Enter database username: " db_user
-    sed -i "s/CHANGE_ME_database_user/$db_user/" .env
+    sed -i "s/your_cpanel_database_user/$db_user/" .env
     
     # Prompt for database password
     read -sp "Enter database password: " db_pass
     echo ""
-    sed -i "s/CHANGE_ME_database_password/$db_pass/" .env
+    sed -i "s/your_cpanel_database_password/$db_pass/" .env
     
     echo "✅ Database credentials updated"
-else
-    echo "✅ Database credentials already configured"
 fi
 
 echo ""
@@ -62,15 +59,13 @@ echo "🔄 Running migrations..."
 php artisan migrate --force
 echo "✅ Migrations completed"
 
-# Clear and cache config
+# Clear and optimize
 echo ""
 echo "🔄 Optimizing application..."
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
-
-# Optimize for production
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -88,6 +83,4 @@ echo "🌐 Your site: https://test.bismight.co.uk"
 echo ""
 echo "⚠️  IMPORTANT: Make sure your domain points to:"
 echo "   /home/bismsjai/test.bismight.co.uk/public"
-echo ""
-echo "   In cPanel → Domains → Manage → Edit Document Root"
 echo ""
