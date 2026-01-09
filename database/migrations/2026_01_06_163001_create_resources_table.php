@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('resources', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('slug')->unique();
             $table->string('category'); // Design, Dev, Strategy
             $table->string('type'); // Figma, PDF, etc
             $table->string('size')->nullable();
